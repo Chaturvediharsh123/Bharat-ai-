@@ -1,0 +1,2 @@
+# Prompt template: simplify/translate bureaucratic text.
+# Filled in Phase 9. Keep numbers, dates and conditions unchanged.

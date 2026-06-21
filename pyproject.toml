@@ -1,0 +1,178 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bharatai"
+version = "0.1.0"
+description = "BharatAI - Autonomous Citizen Intelligence System: an agentic AI bureaucracy copilot for Indian citizens."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "BharatAI" }]
+
+dependencies = [
+  "streamlit>=1.36",
+  "plotly>=5.22",
+  "pydantic>=2.7",
+  "pydantic-settings>=2.3",
+  "python-dotenv>=1.0",
+  "pyjwt>=2.8",
+  "langgraph>=0.2",
+  "langgraph-checkpoint-sqlite>=1.0",
+  "ollama>=0.3",
+  "llama-index-core>=0.11",
+  "llama-index-vector-stores-faiss>=0.2",
+  "llama-index-embeddings-huggingface>=0.3",
+  "faiss-cpu>=1.8",
+  "sentence-transformers>=3.0",
+  "paddleocr>=2.7",
+  "paddlepaddle>=2.6",
+  "opencv-python-headless>=4.9",
+  "pillow>=10.3",
+  "pymupdf>=1.24",
+  "numpy>=1.26",
+  "python-dateutil>=2.9",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.2",
+  "pytest-cov>=5.0",
+  "ruff>=0.5",
+  "mypy>=1.10",
+  "import-linter>=2.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["bharatai*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "D"]
+ignore = ["D203", "D213", "D105", "D107", "UP042"]  # UP042: keep explicit (str, Enum)
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["D"]                       # tests are self-documenting
+"bharatai/ui/pages/*.py" = ["D"]              # Streamlit page scripts
+"bharatai/application/ports/*.py" = ["D102"]  # Protocol method stubs are self-evident
+"streamlit_app.py" = ["E501", "D"]            # repo-root Streamlit delivery app (UI content)
+"ui_support.py" = ["E501", "D"]
+"pages/*.py" = ["E501", "D"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]
+warn_unused_ignores = true
+
+# Third-party libraries without type stubs (some installed only in later phases).
+[[tool.mypy.overrides]]
+module = [
+  "streamlit.*",
+  "plotly.*",
+  "paddleocr.*",
+  "paddle.*",
+  "PIL.*",
+  "faiss.*",
+  "llama_index.*",
+  "ollama.*",
+  "cv2.*",
+  "fitz.*",
+  "sentence_transformers.*",
+  "langgraph.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q -m 'not slow'"
+markers = [
+  "slow: tests that load heavy models or hit the network (run with: pytest -m slow)",
+]
+
+[tool.coverage.run]
+source = ["bharatai"]
+omit = [
+  # Thin adapters exercised only by the gated `-m slow` tests (need a model server / network):
+  "bharatai/infrastructure/llm/ollama_client.py",
+  "bharatai/infrastructure/llm/embeddings.py",
+  "bharatai/infrastructure/ocr/paddle_adapter.py",
+  # Optional / deferred and the Phase-2 placeholder UI library (the real app lives at repo root):
+  "bharatai/orchestration/checkpoint.py",
+  "bharatai/ui/*",
+  "bharatai/common/types.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 95
+
+# ── Clean Architecture enforcement (run: lint-imports) ───────────────────────
+[tool.importlinter]
+root_package = "bharatai"
+
+[[tool.importlinter.contracts]]
+name = "Clean Architecture layers (inward dependency rule)"
+type = "layers"
+layers = [
+  "bharatai.ui",
+  "bharatai.orchestration",
+  "bharatai.agents",
+  "bharatai.application",
+  "bharatai.domain",
+]
+
+[[tool.importlinter.contracts]]
+name = "Domain depends on nothing internal"
+type = "forbidden"
+source_modules = ["bharatai.domain"]
+forbidden_modules = [
+  "bharatai.application", "bharatai.infrastructure", "bharatai.agents",
+  "bharatai.orchestration", "bharatai.ui", "bharatai.bootstrap",
+]
+
+[[tool.importlinter.contracts]]
+name = "Application depends only on domain"
+type = "forbidden"
+source_modules = ["bharatai.application"]
+forbidden_modules = [
+  "bharatai.infrastructure", "bharatai.agents",
+  "bharatai.orchestration", "bharatai.ui", "bharatai.bootstrap",
+]
+
+[[tool.importlinter.contracts]]
+name = "Agents never touch infrastructure (DB/OCR/LLM/FAISS adapters)"
+type = "forbidden"
+source_modules = ["bharatai.agents"]
+forbidden_modules = ["bharatai.infrastructure"]
+
+[[tool.importlinter.contracts]]
+name = "Infrastructure imports only application + domain"
+type = "forbidden"
+source_modules = ["bharatai.infrastructure"]
+forbidden_modules = [
+  "bharatai.agents", "bharatai.orchestration", "bharatai.ui", "bharatai.bootstrap",
+]
+
+[[tool.importlinter.contracts]]
+name = "Orchestration never imports infrastructure"
+type = "forbidden"
+source_modules = ["bharatai.orchestration"]
+forbidden_modules = ["bharatai.infrastructure"]
+
+[[tool.importlinter.contracts]]
+name = "UI never imports AI / infra internals"
+type = "forbidden"
+source_modules = ["bharatai.ui"]
+# UI may invoke the orchestration layer (build state + run the graph) per the data flow,
+# but must never reach into agents or infrastructure directly.
+forbidden_modules = [
+  "bharatai.infrastructure", "bharatai.agents",
+]

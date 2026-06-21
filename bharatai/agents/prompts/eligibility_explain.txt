@@ -1,0 +1,2 @@
+# Prompt template: explain an eligibility decision in plain language.
+# Filled in Phase 7. Must preserve all numbers, thresholds and dates verbatim.

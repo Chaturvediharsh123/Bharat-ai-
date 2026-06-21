@@ -1,0 +1,7 @@
+-- BharatAI SQLite schema (reference snapshot).
+--
+-- The AUTHORITATIVE schema is the ordered set of migrations under ./migrations/.
+-- `PRAGMA user_version` is the migration gate (see connection.apply_migrations).
+-- This file is a human-readable pointer only; do not apply it directly.
+--
+-- Current version: 1  (see migrations/0001_init.sql)

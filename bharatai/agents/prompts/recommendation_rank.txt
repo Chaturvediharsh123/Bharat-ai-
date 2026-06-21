@@ -1,0 +1,2 @@
+# Prompt template: rank eligible-but-unavailed schemes (qualitative).
+# Filled in Phase 10. No rupee 'lost benefit' figure in v1 output.
