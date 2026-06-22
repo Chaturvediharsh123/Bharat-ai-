@@ -74,8 +74,4 @@ Full setup + configuration is in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 bash scripts/check.sh        # ruff + mypy --strict + import-linter + pytest + coverage (≥95%)
 pytest -m slow               # optional: real-model tests (bge embeddings, PaddleOCR)
 ```
-
-## Roadmap (all delivered)
-1 Architecture · 2 Folder structure · 3 Database · 4 Knowledge base · 5 OCR · 6 Profile agent ·
-7 Eligibility · 8 Document · 9 Translator · 10 Recommendation · 11 Reminder · 12 LangGraph ·
-13 Streamlit · 14 Testing · 15 Optimization · 16 Docs — ✅
+\
